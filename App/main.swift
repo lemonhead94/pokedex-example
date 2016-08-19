@@ -10,7 +10,7 @@ let mustache = VaporMustache.Provider(withIncludes: [
 
 let mysql = try VaporMySQL.Provider(host: "localhost", user: "root", password: "", database: "pokedex")
 
-let drop = Droplet(preparations: [Pokemon.self], providers: [VaporMustache.Provider.self], initializedProviders: [mysql])
+let drop = Droplet(preparations: [Pokemon.self], initializedProviders: [mysql, mustache])
 
 let _ = drop.config["app", "key"].string ?? ""
 
@@ -59,7 +59,7 @@ class InvalidParameterMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
-        } catch Abort.notFound {
+        } catch Abort.custom(status: .badRequest, message: "Invalid Pokémon name.") {
             return try drop.view("not-found.mustache").makeResponse()
         }
     }
